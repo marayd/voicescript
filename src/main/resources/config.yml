@@ -1,0 +1,9 @@
+default-language: ru
+
+models:
+  russian:
+    name: "ru"
+    path: "models/ru_model.mdl"
+  english:
+    name: "en"
+    path: "models/en_model.mdl"

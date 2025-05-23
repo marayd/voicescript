@@ -1,0 +1,17 @@
+name: VoiceScript
+version: '1.0-SNAPSHOT'
+main: org.mryd.VoiceScript
+description: "Script language that supports Plasmo and Simple voice chats!"
+api-version: '1.21'
+author: mryd
+website: "https://mryd.org"
+commands:
+  lua:
+    description: lua
+depend:
+  - voicechat
+  - PlasmoVoice
+libraries:
+  - org.luaj:luaj-jse:3.0.1
+  - com.alphacephei:vosk:0.3.45
+  - com.openai:openai-java:2.2.0
