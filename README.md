@@ -21,7 +21,7 @@ VoiceScript is a voice-powered scripting platform that brings the power of **Lua
 
 ## 🔄 How It Works
 
-Players speak ➡️ VOSK recognizes speech ➡️ Your Lua script reacts accordingly
+Players speaks ➡️ Your Lua script reacts accordingly
 
 ## 🚫 Development Status
 
