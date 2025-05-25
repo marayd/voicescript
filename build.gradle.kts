@@ -26,7 +26,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok:1.18.36")
     annotationProcessor("org.projectlombok:lombok:1.18.36")
 
-    compileOnly("com.openai:openai-java:2.2.0")
+    compileOnly("com.google.code.gson:gson:2.12.1")
     compileOnly("org.luaj:luaj-jse:3.0.1")
     compileOnly("com.alphacephei:vosk:0.3.45")
 }

@@ -1,14 +1,9 @@
 package org.mryd.lua.wrap;
 
 import net.kyori.adventure.text.Component;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Server;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
-
 import org.luaj.vm2.*;
-import org.luaj.vm2.lib.OneArgFunction;
 import org.luaj.vm2.lib.VarArgFunction;
 import org.mryd.lua.wrap.world.LuaLocationWrapper;
 import org.mryd.lua.wrap.world.LuaPlayerWrapper;
@@ -20,32 +15,33 @@ public class LuaServerWrapper extends LuaTable {
 
     public LuaServerWrapper() {
         Server server = Bukkit.getServer();
+        MainThreadFunctionWrapper wrapper = MainThreadFunctionWrapper.get();
 
-        // getPlayer(name or UUID)
-        set("getPlayer", new VarArgFunction() {
+        // Get player by name or UUID
+        set("getPlayer", wrapper.wrap(new VarArgFunction() {
             @Override
             public Varargs invoke(Varargs args) {
                 if (args.narg() < 1) return NIL;
-                LuaValue arg = args.arg(1);
+
+                LuaValue value = args.arg(1);
                 Player player = null;
 
-                if (arg.isstring()) {
-                    String str = arg.tojstring();
+                if (value.isstring()) {
+                    String input = value.tojstring();
                     try {
-                        UUID uuid = UUID.fromString(str);
+                        UUID uuid = UUID.fromString(input);
                         player = server.getPlayer(uuid);
                     } catch (IllegalArgumentException e) {
-                        player = server.getPlayer(str);
+                        player = server.getPlayer(input);
                     }
                 }
 
-                if (player == null) return NIL;
-                return new LuaPlayerWrapper(player);
+                return (player != null) ? new LuaPlayerWrapper(player) : NIL;
             }
-        });
+        }));
 
-        // getLocation(x, y, z, worldName)
-        set("getLocation", new VarArgFunction() {
+        // Create location object by (x, y, z, world)
+        set("getLocation", wrapper.wrap(new VarArgFunction() {
             @Override
             public Varargs invoke(Varargs args) {
                 if (args.narg() < 4) return NIL;
@@ -58,35 +54,45 @@ public class LuaServerWrapper extends LuaTable {
                 World world = server.getWorld(worldName);
                 if (world == null) return NIL;
 
-                Location loc = new Location(world, x, y, z);
-                return new LuaLocationWrapper(loc);
+                return new LuaLocationWrapper(new Location(world, x, y, z));
             }
-        });
+        }));
 
-        // getWorld(name)
-        set("getWorld", new OneArgFunction() {
+        // Get world by name
+        set("getWorld", wrapper.wrap(new VarArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
-                World world = server.getWorld(arg.tojstring());
-                if (world == null) return NIL;
-                return new LuaWorldWrapper(world);
+            public Varargs invoke(Varargs args) {
+                if (args.narg() < 1) return NIL;
+
+                String name = args.arg(1).tojstring();
+                World world = server.getWorld(name);
+
+                return (world != null) ? new LuaWorldWrapper(world) : NIL;
             }
-        });
+        }));
 
-        set("broadcast", new OneArgFunction() {
+        // Broadcast message
+        set("broadcast", wrapper.wrap(new VarArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
-                Bukkit.broadcast(Component.text(arg.tojstring()));
+            public Varargs invoke(Varargs args) {
+                if (args.narg() < 1) return NIL;
+
+                String message = args.arg(1).tojstring();
+                Bukkit.broadcast(Component.text(message));
                 return NIL;
             }
-        });
+        }));
 
-        set("execute", new OneArgFunction() {
+        // Execute console command
+        set("execute", wrapper.wrap(new VarArgFunction() {
             @Override
-            public LuaValue call(LuaValue arg) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), arg.tojstring());
+            public Varargs invoke(Varargs args) {
+                if (args.narg() < 1) return NIL;
+
+                String command = args.arg(1).tojstring();
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
                 return NIL;
             }
-        });
+        }));
     }
 }

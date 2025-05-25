@@ -8,23 +8,23 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.OneArgFunction;
-import org.luaj.vm2.lib.TwoArgFunction;
-import org.luaj.vm2.lib.ZeroArgFunction;
+import org.luaj.vm2.*;
+import org.luaj.vm2.lib.VarArgFunction;
+import org.mryd.lua.wrap.MainThreadFunctionWrapper;
 
 public class LuaPlayerWrapper extends LuaTable {
     private final Player player;
+    private final MainThreadFunctionWrapper wrapper = MainThreadFunctionWrapper.get();
 
     public LuaPlayerWrapper(Player player) {
         this.player = player;
 
         LuaTable meta = new LuaTable();
-        meta.set("__index", new TwoArgFunction() {
+        meta.set("__index", new VarArgFunction() {
             @Override
-            public LuaValue call(LuaValue table, LuaValue key) {
-                String k = key.checkjstring();
+            public Varargs invoke(Varargs args) {
+                String k = args.arg(2).checkjstring();
+
                 return switch (k) {
                     case "name" -> valueOf(player.getName());
                     case "uuid" -> valueOf(player.getUniqueId().toString());
@@ -45,189 +45,177 @@ public class LuaPlayerWrapper extends LuaTable {
         });
         setmetatable(meta);
 
-        // Messaging
-        set("sendMessage", new OneArgFunction() {
-            public LuaValue call(LuaValue msg) {
-                player.sendMessage(msg.tojstring());
+        set("sendMessage", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.sendMessage(args.arg(1).tojstring());
                 return NIL;
             }
-        });
+        }));
 
-        // Commands
-        set("performCommand", new OneArgFunction() {
-            public LuaValue call(LuaValue cmd) {
-                player.performCommand(cmd.tojstring());
+        set("performCommand", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.performCommand(args.arg(1).tojstring());
                 return NIL;
             }
-        });
+        }));
 
-        // Health
-        set("setHealth", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setHealth(val.checkdouble());
+        set("setHealth", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setHealth(args.arg(1).checkdouble());
                 return NIL;
             }
-        });
+        }));
 
-        // Experience
-        set("setExp", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setExp((float) val.checkdouble());
+        set("setExp", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setExp((float) args.arg(1).checkdouble());
                 return NIL;
             }
-        });
+        }));
 
-        set("setLevel", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setLevel(val.checkint());
+        set("setLevel", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setLevel(args.arg(1).checkint());
                 return NIL;
             }
-        });
+        }));
 
-        // Food
-        set("setFoodLevel", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setFoodLevel(val.checkint());
+        set("setFoodLevel", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setFoodLevel(args.arg(1).checkint());
                 return NIL;
             }
-        });
+        }));
 
-        set("setSaturation", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setSaturation((float) val.checkdouble());
+        set("setSaturation", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setSaturation((float) args.arg(1).checkdouble());
                 return NIL;
             }
-        });
+        }));
 
-        // Flying
-        set("setFlying", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setFlying(val.checkboolean());
+        set("setFlying", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setFlying(args.arg(1).checkboolean());
                 return NIL;
             }
-        });
+        }));
 
-        set("setAllowFlight", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
-                player.setAllowFlight(val.checkboolean());
+        set("setAllowFlight", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.setAllowFlight(args.arg(1).checkboolean());
                 return NIL;
             }
-        });
+        }));
 
-        // GameMode
-        set("setGameMode", new OneArgFunction() {
-            public LuaValue call(LuaValue val) {
+        set("setGameMode", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
                 try {
-                    GameMode mode = GameMode.valueOf(val.checkjstring().toUpperCase());
+                    GameMode mode = GameMode.valueOf(args.arg(1).checkjstring().toUpperCase());
                     player.setGameMode(mode);
                 } catch (IllegalArgumentException e) {
-                    return error("Invalid game mode: " + val.tojstring());
+                    return error("Invalid game mode: " + args.arg(1).tojstring());
                 }
                 return NIL;
             }
-        });
+        }));
 
-        // Teleportation
-        set("teleport", new OneArgFunction() {
-            public LuaValue call(LuaValue loc) {
+        set("teleport", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                LuaValue loc = args.arg(1);
                 if (loc instanceof LuaLocationWrapper luaLoc) {
                     player.teleport(luaLoc.getBukkitLocation());
                     return NIL;
                 }
                 return error("Expected location object");
             }
-        });
+        }));
 
-        // Inventory
-        set("clearInventory", new ZeroArgFunction() {
-            public LuaValue call() {
+        set("clearInventory", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
                 player.getInventory().clear();
                 return NIL;
             }
-        });
+        }));
 
-        set("getItemInHand", new ZeroArgFunction() {
-            public LuaValue call() {
+        set("getItemInHand", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
                 return valueOf(player.getInventory().getItemInMainHand().getType().toString());
             }
-        });
+        }));
 
-        set("giveItem", new TwoArgFunction() {
-            public LuaValue call(LuaValue materialName, LuaValue amount) {
+        set("giveItem", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                String materialName = args.arg(1).checkjstring().toUpperCase();
+                int amount = args.arg(2).checkint();
                 try {
-                    Material mat = Material.valueOf(materialName.checkjstring().toUpperCase());
-                    player.getInventory().addItem(new ItemStack(mat, amount.checkint()));
+                    Material mat = Material.valueOf(materialName);
+                    player.getInventory().addItem(new ItemStack(mat, amount));
                     return NIL;
                 } catch (IllegalArgumentException e) {
-                    return error("Invalid material: " + materialName.tojstring());
+                    return error("Invalid material: " + materialName);
                 }
             }
-        });
+        }));
 
-        // Potion effects
-        set("addEffect", new TwoArgFunction() {
-            public LuaValue call(LuaValue name, LuaValue seconds) {
-                try {
-                    PotionEffectType type = PotionEffectType.getByName(name.checkjstring().toUpperCase());
-                    if (type == null) return error("Invalid potion type");
-                    player.addPotionEffect(new PotionEffect(type, seconds.checkint() * 20, 1));
-                    return NIL;
-                } catch (Exception e) {
-                    return error("Failed to add potion effect: " + e.getMessage());
-                }
+        set("addEffect", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                String typeName = args.arg(1).checkjstring().toUpperCase();
+                int duration = args.arg(2).checkint() * 20;
+                PotionEffectType type = PotionEffectType.getByName(typeName);
+                if (type == null) return error("Invalid potion type");
+                player.addPotionEffect(new PotionEffect(type, duration, 1));
+                return NIL;
             }
-        });
+        }));
 
-        set("clearEffects", new ZeroArgFunction() {
-            public LuaValue call() {
+        set("clearEffects", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
                 player.getActivePotionEffects().forEach(effect -> player.removePotionEffect(effect.getType()));
                 return NIL;
             }
-        });
+        }));
 
-        // Attribute API (e.g., speed, attack damage, etc.)
-        set("getAttribute", new OneArgFunction() {
-            public LuaValue call(LuaValue attrName) {
-                Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(attrName.checkjstring().toLowerCase()));
-                if (attr == null) return error("Invalid attribute: " + attrName.tojstring());
-
+        set("getAttribute", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                String attrName = args.arg(1).checkjstring().toLowerCase();
+                Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(attrName));
+                if (attr == null) return error("Invalid attribute: " + attrName);
                 AttributeInstance instance = player.getAttribute(attr);
                 return instance != null ? valueOf(instance.getValue()) : NIL;
             }
-        });
+        }));
 
-        set("setAttribute", new TwoArgFunction() {
-            public LuaValue call(LuaValue attrName, LuaValue val) {
-                Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(attrName.checkjstring().toLowerCase()));
-                if (attr == null) return error("Invalid attribute: " + attrName.tojstring());
-
+        set("setAttribute", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                String attrName = args.arg(1).checkjstring().toLowerCase();
+                double value = args.arg(2).checkdouble();
+                Attribute attr = Registry.ATTRIBUTE.get(NamespacedKey.minecraft(attrName));
+                if (attr == null) return error("Invalid attribute: " + attrName);
                 AttributeInstance instance = player.getAttribute(attr);
-                if (instance != null) {
-                    instance.setBaseValue(val.checkdouble());
-                }
+                if (instance != null) instance.setBaseValue(value);
                 return NIL;
             }
-        });
+        }));
 
-        // Sound
-        set("playSound", new TwoArgFunction() {
-            public LuaValue call(LuaValue name, LuaValue volume) {
+        set("playSound", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
                 try {
-                    Sound sound = Sound.valueOf(name.checkjstring().toUpperCase());
-                    player.playSound(player.getLocation(), sound, (float) volume.checkdouble(), 1.0f);
+                    Sound sound = Sound.valueOf(args.arg(1).checkjstring().toUpperCase());
+                    float volume = (float) args.arg(2).checkdouble();
+                    player.playSound(player.getLocation(), sound, volume, 1.0f);
                 } catch (Exception e) {
-                    return error("Invalid sound: " + name.tojstring());
+                    return error("Invalid sound: " + args.arg(1).tojstring());
                 }
                 return NIL;
             }
-        });
+        }));
 
-        // Utilities
-        set("kick", new OneArgFunction() {
-            public LuaValue call(LuaValue reason) {
-                player.kick(Component.text(reason.tojstring()));
+        set("kick", wrapper.wrap(new VarArgFunction() {
+            public Varargs invoke(Varargs args) {
+                player.kick(Component.text(args.arg(1).tojstring()));
                 return NIL;
             }
-        });
+        }));
     }
 }

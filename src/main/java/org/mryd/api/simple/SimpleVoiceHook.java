@@ -159,14 +159,14 @@ public class SimpleVoiceHook implements VoicechatPlugin {
             saveCurrentPhrase();
             decoder.close();
 
-            try {
-                File output = new File("voice_" + playerId + "_final.wav");
-                mergeWavFiles(clips, output);
-                log.info("Final WAV saved: {}", output.getAbsolutePath());
-            } catch (Exception e) {
-                log.error("Error merging WAV files for {}", playerId, e);
-            }
-            clips.forEach(File::delete);
+//            try {
+//                File output = new File("voice_" + playerId + "_final.wav");
+//                mergeWavFiles(clips, output);
+//                log.info("Final WAV saved: {}", output.getAbsolutePath());
+//            } catch (Exception e) {
+//                log.error("Error merging WAV files for {}", playerId, e);
+//            }
+//            clips.forEach(File::delete);
         }
 
         private void mergeWavFiles(List<File> inputFiles, File outputFile) throws IOException, UnsupportedAudioFileException {

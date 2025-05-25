@@ -27,7 +27,7 @@ public class LuaAiWrapper extends LuaTable {
 
                 new Thread(() -> {
                     try {
-                        String result = IntelligenceUtils.generateContent(content, instruction, baseUrl, apiKey, model);
+                        String result = IntelligenceUtils.generateContent(instruction, content, baseUrl, apiKey, model);
                         callback.call(LuaValue.valueOf(result));
                     } catch (Exception e) {
                         callback.call(LuaValue.valueOf("Error: " + e.getMessage()));
